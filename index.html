@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Day in the Field — NRS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Syne:wght@800&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #070709;
+  --bg2: #0d0d12;
+  --text: #e8e4f0;
+  --muted: #7a748e;
+  --dim: #4a3d78;
+  --a1: #7c5bd7;
+  --a3: #9b7ef8;
+  --rule: #1a1820;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Syne', sans-serif;
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 300;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 3rem;
+  border-bottom: 1px solid var(--rule);
+}
+.nav-logo {
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--a3);
+  text-decoration: none;
+}
+.nav-back {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-back:hover { color: var(--text); }
+
+/* ── GAME SHELL ── */
+.game-shell {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 4rem 2rem 6rem;
+}
+
+.game-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 1.5rem;
+}
+
+/* progress bar */
+.progress-track {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 3rem;
+}
+.progress-pip {
+  height: 2px;
+  flex: 1;
+  background: var(--rule);
+  transition: background 0.4s;
+}
+.progress-pip.done { background: var(--a1); }
+.progress-pip.active { background: var(--a3); }
+
+/* scene text */
+.scene-location {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 1.2rem;
+}
+.scene-text {
+  font-family: var(--serif);
+  font-size: clamp(1.15rem, 2.5vw, 1.5rem);
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--text);
+  margin-bottom: 2.5rem;
+  min-height: 6rem;
+}
+.scene-text em { font-style: italic; color: var(--a3); }
+
+/* choices */
+.choices { display: flex; flex-direction: column; gap: 1rem; }
+
+.choice-btn {
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 300;
+  line-height: 1.6;
+  text-align: left;
+  padding: 1.1rem 1.4rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  position: relative;
+}
+.choice-btn::before {
+  content: '→';
+  position: absolute;
+  right: 1.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--dim);
+  transition: color 0.2s, right 0.2s;
+}
+.choice-btn:hover {
+  border-color: var(--a3);
+  color: var(--text);
+  background: rgba(155,126,248,0.04);
+}
+.choice-btn:hover::before { color: var(--a3); right: 1.1rem; }
+
+/* ending card */
+.ending {
+  display: none;
+  border: 1px solid var(--rule);
+  padding: 2.5rem;
+  background: var(--bg2);
+}
+.ending-type {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 1rem;
+}
+.ending-title {
+  font-family: var(--serif);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 300;
+  color: var(--a3);
+  line-height: 1.2;
+  margin-bottom: 1.2rem;
+}
+.ending-body {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.9;
+  margin-bottom: 2rem;
+}
+.ending-note {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--dim);
+  border-top: 1px solid var(--rule);
+  padding-top: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.restart-btn {
+  background: none;
+  border: 1px solid rgba(155,126,248,0.35);
+  color: var(--a3);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.4rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.restart-btn:hover {
+  border-color: var(--a3);
+  background: rgba(155,126,248,0.06);
+  color: var(--text);
+}
+
+/* story log (previous beats) */
+.log {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.log-entry {
+  font-size: 0.8rem;
+  color: var(--dim);
+  line-height: 1.7;
+  padding-left: 1rem;
+  border-left: 1px solid var(--rule);
+}
+
+footer {
+  border-top: 1px solid var(--rule);
+  padding: 2rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+footer p { font-size: 0.72rem; color: var(--dim); }
+
+@media (max-width: 600px) {
+  nav, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .game-shell { padding: 3rem 1.5rem 5rem; }
+}
+
+/* fade transition */
+.fade { animation: fadeIn 0.4s ease both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://nrsociality.org/" class="nav-logo">NRS.</a>
+  <a href="https://nrsociality.org/" class="nav-back">← Back</a>
+</nav>
+
+<div class="game-shell">
+  <p class="game-label">A Day in the Field</p>
+
+  <div class="progress-track" id="progress">
+    <div class="progress-pip active" id="pip-0"></div>
+    <div class="progress-pip" id="pip-1"></div>
+    <div class="progress-pip" id="pip-2"></div>
+    <div class="progress-pip" id="pip-3"></div>
+  </div>
+
+  <div id="log" class="log"></div>
+
+  <div id="scene">
+    <p class="scene-location" id="location"></p>
+    <p class="scene-text fade" id="scene-text"></p>
+    <div class="choices fade" id="choices"></div>
+  </div>
+
+  <div class="ending fade" id="ending">
+    <p class="ending-type" id="ending-type"></p>
+    <h2 class="ending-title" id="ending-title"></h2>
+    <p class="ending-body" id="ending-body"></p>
+    <p class="ending-note" id="ending-note"></p>
+    <button class="restart-btn" onclick="restart()">Begin again →</button>
+  </div>
+</div>
+
+<footer>
+  <a href="https://nrsociality.org/" style="font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:800;color:#7c5bd7;letter-spacing:0.1em;text-decoration:none;">NRS.</a>
+  <p>Anti disciplinary research &amp; social action</p>
+</footer>
+
+<script>
+// ── STORY DATA ──────────────────────────────────────────────
+
+const story = {
+
+  start: {
+    location: "Day 1 — The Village",
+    text: "You have arrived in a village in rural Uttar Pradesh to begin fieldwork. Your research is on women's unpaid labor in micro-enterprises. Your host introduces you to three women willing to speak with you. You have one afternoon.",
+    choices: [
+      { text: "Sit with the eldest woman. Let her speak first, without questions.", next: "listen" },
+      { text: "Open your notebook and begin a structured interview.", next: "structured" },
+      { text: "Ask if you can simply watch them work for a while.", next: "observe" }
+    ]
+  },
+
+  listen: {
+    location: "Day 1 — Afternoon",
+    text: "She speaks for forty minutes without interruption. Her story moves between her daughter's wedding, a failed goat-rearing venture, and the price of dal. You are not sure what is data and what is not. <em>Maybe that is the point.</em>",
+    choices: [
+      { text: "Follow the thread about the goats — press deeper.", next: "goats_deep" },
+      { text: "Let the conversation end naturally. Write your notes alone.", next: "write_alone" }
+    ]
+  },
+
+  structured: {
+    location: "Day 1 — Afternoon",
+    text: "You move through your questions. The answers are short, polite. Correct. You feel a growing distance — like speaking through glass. The youngest woman glances at your notebook and falls silent.",
+    choices: [
+      { text: "Close the notebook. Ask: 'What would you want me to understand?'", next: "pivot" },
+      { text: "Continue — the data will speak for itself.", next: "by_the_book" }
+    ]
+  },
+
+  observe: {
+    location: "Day 1 — The Courtyard",
+    text: "You sit in the corner. They work — sorting, stitching, feeding a child, arguing over thread. Nobody explains anything. After an hour, one woman looks at you and laughs. <em>'You look lost,'</em> she says.",
+    choices: [
+      { text: "Laugh with her. Admit you are lost.", next: "admit_lost" },
+      { text: "Say you are learning. Ask if she'll explain what they're making.", next: "ask_explain" }
+    ]
+  },
+
+  // ── BRANCH: LISTEN ──
+
+  goats_deep: {
+    location: "Day 2 — Early Morning",
+    text: "You return and ask about the goats. She pauses, then tells you about the microfinance group that lent them money — the meetings every Tuesday, the shame when payments were missed, the way the other women looked at her. This is not in your research proposal.",
+    choices: [
+      { text: "Follow it anyway. Write a note to revisit your framework.", next: "end_expansive" },
+      { text: "Gently steer back to your original topic.", next: "end_disciplined" }
+    ]
+  },
+
+  write_alone: {
+    location: "Day 1 — Night",
+    text: "You fill six pages. Her voice is still in your head. You are not sure what to do with a story about a wedding and dal prices. You type up your notes and realize: <em>you have no 'data' and everything you need.</em>",
+    choices: [
+      { text: "Let the story lead. Revise your research questions.", next: "end_expansive" },
+      { text: "Extract only what fits your framework. Discard the rest.", next: "end_disciplined" }
+    ]
+  },
+
+  // ── BRANCH: STRUCTURED ──
+
+  pivot: {
+    location: "Day 1 — Afternoon",
+    text: "She looks at you for a long time. Then she tells you about a government scheme she applied for, how the officer asked for a bribe she couldn't pay, how she told no one. <em>You had not thought to ask about the state.</em>",
+    choices: [
+      { text: "Let this reshape the inquiry entirely.", next: "end_expansive" },
+      { text: "Note it as context. Return to your questions.", next: "end_disciplined" }
+    ]
+  },
+
+  by_the_book: {
+    location: "Day 1 — Evening",
+    text: "You have clean data. Codeable answers. You return to your notes and they read like a report someone else wrote, about people you never quite met. The youngest woman's silence fills the margins.",
+    choices: [
+      { text: "Go back tomorrow. Leave the notebook behind.", next: "end_expansive" },
+      { text: "The methodology is sound. Proceed.", next: "end_controlled" }
+    ]
+  },
+
+  // ── BRANCH: OBSERVE ──
+
+  admit_lost: {
+    location: "Day 1 — Courtyard",
+    text: "She nods slowly. <em>'Everyone is, at first.'</em> She makes space for you beside her and shows you how to sort the threads by feel, not color. You work beside them for the rest of the afternoon. You learn nothing you expected. You learn everything.",
+    choices: [
+      { text: "This is the research now. Trust it.", next: "end_immersive" },
+      { text: "Tomorrow, ask structured questions. Ground what you've observed.", next: "end_expansive" }
+    ]
+  },
+
+  ask_explain: {
+    location: "Day 1 — Courtyard",
+    text: "She explains — but the explanation is for you, shaped by what she thinks you want to hear. You notice the performance of it. You wonder: <em>does every interview do this?</em>",
+    choices: [
+      { text: "Ask her: 'What would you not explain to a researcher?'", next: "end_immersive" },
+      { text: "Accept the explanation. It is still data.", next: "end_disciplined" }
+    ]
+  },
+
+  // ── ENDINGS ──────────────────────────────────────────────
+
+  end_expansive: {
+    ending: true,
+    type: "Ending — The Open Hand",
+    title: "You let the field reshape you.",
+    body: "Your research proposal sits in your bag, amended beyond recognition. The question you came with has become three questions. Two of them you cannot yet name. You will return. You will write something that doesn't quite fit any journal category. That is exactly right.",
+    note: '"The researcher who returns unchanged has not yet arrived."',
+    pip: 3
+  },
+
+  end_immersive: {
+    ending: true,
+    type: "Ending — Presence",
+    title: "You stayed long enough to be forgotten.",
+    body: "At some point they stopped explaining things to you. You were simply there — in the rhythm of the work, the argument, the afternoon heat. Your notes are thin. Your understanding is not. When you write this up, you will struggle to cite it. That is the cost and the gift of being present.",
+    note: '"The best field notes are the ones written from memory, not in the moment."',
+    pip: 3
+  },
+
+  end_disciplined: {
+    ending: true,
+    type: "Ending — The Clean Study",
+    title: "The data is intact.",
+    body: "Your methodology is rigorous. Your findings are defensible. Peer review will be kind. And yet, on the train back, you think about the woman who went quiet when you opened your notebook. You wonder what was in the silence. Maybe next time you will find out.",
+    note: '"Every clean study leaves a residue of everything it chose not to ask."',
+    pip: 3
+  },
+
+  end_controlled: {
+    ending: true,
+    type: "Ending — Distance as Method",
+    title: "You kept your distance. The distance kept you.",
+    body: "The paper is publishable. Reviewers praise the consistency of your instrument. You are invited to present at a conference. On the panel, someone asks whether you think the women in your study would recognize themselves in your findings. You pause longer than you mean to.",
+    note: '"Objectivity is not the absence of perspective. It is the refusal to examine it."',
+    pip: 3
+  }
+};
+
+// ── ENGINE ───────────────────────────────────────────────────
+
+let history = [];
+let step = 0;
+const TOTAL_STEPS = 4;
+
+function updateProgress(currentStep) {
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const pip = document.getElementById('pip-' + i);
+    if (i < currentStep) pip.className = 'progress-pip done';
+    else if (i === currentStep) pip.className = 'progress-pip active';
+    else pip.className = 'progress-pip';
+  }
+}
+
+function renderScene(key) {
+  const scene = story[key];
+  if (!scene) return;
+
+  if (scene.ending) {
+    document.getElementById('scene').style.display = 'none';
+    const el = document.getElementById('ending');
+    el.style.display = 'block';
+    el.className = 'ending fade';
+    document.getElementById('ending-type').textContent = scene.type;
+    document.getElementById('ending-title').textContent = scene.title;
+    document.getElementById('ending-body').textContent = scene.body;
+    document.getElementById('ending-note').textContent = scene.note;
+    updateProgress(TOTAL_STEPS - 1);
+    renderLog();
+    return;
+  }
+
+  step++;
+  updateProgress(Math.min(step, TOTAL_STEPS - 2));
+
+  document.getElementById('location').textContent = scene.location;
+
+  const textEl = document.getElementById('scene-text');
+  textEl.innerHTML = scene.text;
+  textEl.className = 'scene-text fade';
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  choicesEl.className = 'choices fade';
+
+  scene.choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = choice.text;
+    btn.onclick = () => {
+      history.push({ location: scene.location, chosen: choice.text });
+      renderLog();
+      renderScene(choice.next);
+    };
+    choicesEl.appendChild(btn);
+  });
+}
+
+function renderLog() {
+  const logEl = document.getElementById('log');
+  logEl.innerHTML = '';
+  history.forEach(entry => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.textContent = entry.chosen;
+    logEl.appendChild(div);
+  });
+}
+
+function restart() {
+  history = [];
+  step = 0;
+  document.getElementById('ending').style.display = 'none';
+  document.getElementById('scene').style.display = 'block';
+  document.getElementById('log').innerHTML = '';
+  renderScene('start');
+}
+
+// ── INIT
+renderScene('start');
+</script>
+</body>
+</html>
