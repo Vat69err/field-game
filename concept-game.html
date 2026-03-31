@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect the Concepts — NRS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Syne:wght@800&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #070709;
+  --bg2: #0d0d12;
+  --text: #e8e4f0;
+  --muted: #7a748e;
+  --dim: #4a3d78;
+  --a1: #7c5bd7;
+  --a3: #9b7ef8;
+  --rule: #1a1820;
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  overflow-x: hidden;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 3rem;
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+  z-index: 10;
+}
+.nav-logo { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; letter-spacing: 0.08em; color: var(--a3); text-decoration: none; }
+.nav-back { color: var(--muted); text-decoration: none; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; }
+.nav-back:hover { color: var(--text); }
+
+/* ── HEADER ── */
+.header {
+  padding: 3rem 3rem 2rem;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+.header-left {}
+.header-label { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.8rem; }
+.header-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 300; line-height: 1.2; color: var(--text); }
+.header-title em { font-style: italic; color: var(--a3); }
+.header-right { font-size: 0.8rem; color: var(--muted); line-height: 1.8; max-width: 280px; }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  padding: 1rem 3rem;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.stat { display: flex; flex-direction: column; gap: 0.2rem; }
+.stat-val { font-size: 1.3rem; font-weight: 300; color: var(--a3); font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim); }
+
+.reset-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.reset-btn:hover { border-color: var(--a3); color: var(--a3); }
+
+/* ── CANVAS AREA ── */
+.canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 560px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+  cursor: default;
+}
+
+svg#web {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── NODES ── */
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s, color 0.2s, background 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.node:hover {
+  border-color: var(--a3);
+  color: var(--text);
+  background: #110e1a;
+}
+.node.selected {
+  border-color: var(--a3);
+  color: var(--a3);
+  background: #110e1a;
+  box-shadow: 0 0 0 1px var(--a3);
+}
+.node.connected {
+  border-color: var(--a1);
+  color: var(--text);
+}
+
+/* ── INSIGHT PANEL ── */
+.insight-panel {
+  padding: 1.8rem 3rem;
+  border-bottom: 1px solid var(--rule);
+  min-height: 6rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.insight-icon {
+  width: 2px;
+  height: 2.5rem;
+  background: var(--a3);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.insight-icon.show { opacity: 1; }
+.insight-inner { flex: 1; }
+.insight-pair {
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 0.4rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.insight-pair.show { opacity: 1; }
+.insight-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.6;
+  opacity: 0;
+  transition: opacity 0.4s 0.1s;
+}
+.insight-text.show { opacity: 1; }
+.insight-placeholder {
+  font-size: 0.82rem;
+  color: var(--dim);
+  transition: opacity 0.3s;
+}
+
+/* ── DISCOVERED LIST ── */
+.discovered {
+  padding: 2rem 3rem 4rem;
+}
+.discovered-label { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); margin-bottom: 1.2rem; }
+.discovered-list { display: flex; flex-direction: column; gap: 0; }
+.disc-item {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--rule);
+  animation: fadeUp 0.3s ease both;
+}
+.disc-item:last-child { border-bottom: 1px solid var(--rule); }
+.disc-pair { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--a3); min-width: 220px; flex-shrink: 0; }
+.disc-insight { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; font-style: italic; color: var(--muted); }
+
+.empty-state { font-size: 0.82rem; color: var(--dim); padding: 0.5rem 0; }
+
+footer {
+  border-top: 1px solid var(--rule);
+  padding: 2rem 3rem;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+footer p { font-size: 0.72rem; color: var(--dim); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 600px) {
+  nav, .header, .stats-bar, .insight-panel, .discovered, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .canvas-wrap { height: 460px; }
+  .disc-pair { min-width: 160px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://nrsociality.org/" class="nav-logo">NRS.</a>
+  <a href="https://nrsociality.org/" class="nav-back">← Back</a>
+</nav>
+
+<div class="header">
+  <div class="header-left">
+    <p class="header-label">Knowledge Web</p>
+    <h1 class="header-title">Connect the <em>Concepts</em>.</h1>
+  </div>
+  <p class="header-right">Click a concept, then click another to link them. Find the connections NRS researchers think about.</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><span class="stat-val" id="found-count">0</span><span class="stat-label">Found</span></div>
+  <div class="stat"><span class="stat-val" id="total-count">0</span><span class="stat-label">Total</span></div>
+  <div class="stat"><span class="stat-val" id="attempt-count">0</span><span class="stat-label">Attempts</span></div>
+  <button class="reset-btn" onclick="resetGame()">Reset</button>
+</div>
+
+<div class="canvas-wrap" id="canvas">
+  <svg id="web"></svg>
+</div>
+
+<div class="insight-panel">
+  <div class="insight-icon" id="ins-icon"></div>
+  <div class="insight-inner">
+    <p class="insight-pair" id="ins-pair"></p>
+    <p class="insight-text" id="ins-text"></p>
+    <p class="insight-placeholder" id="ins-placeholder">Click any concept to begin.</p>
+  </div>
+</div>
+
+<div class="discovered">
+  <p class="discovered-label">Discovered Connections</p>
+  <div class="discovered-list" id="disc-list">
+    <p class="empty-state">None yet — start connecting.</p>
+  </div>
+</div>
+
+<footer>
+  <a href="https://nrsociality.org/" style="font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:800;color:#7c5bd7;letter-spacing:0.1em;text-decoration:none;">NRS.</a>
+  <p>Anti disciplinary research &amp; social action</p>
+</footer>
+
+<script>
+// ── CONCEPTS ─────────────────────────────────────────────────
+
+const concepts = [
+  { id: "labor",      label: "Labor" },
+  { id: "state",      label: "State" },
+  { id: "identity",   label: "Identity" },
+  { id: "memory",     label: "Memory" },
+  { id: "violence",   label: "Violence" },
+  { id: "caste",      label: "Caste" },
+  { id: "gender",     label: "Gender" },
+  { id: "algorithm",  label: "Algorithm" },
+  { id: "community",  label: "Community" },
+  { id: "story",      label: "Story" },
+  { id: "knowledge",  label: "Knowledge" },
+  { id: "resistance", label: "Resistance" },
+  { id: "emotion",    label: "Emotion" },
+  { id: "field",      label: "The Field" },
+];
+
+// ── CONNECTIONS ───────────────────────────────────────────────
+// Each pair has an insight. Order doesn't matter — engine checks both directions.
+
+const connections = [
+  { a: "labor",      b: "gender",     insight: "Most unpaid labor is invisible. Most invisible labor is gendered." },
+  { a: "labor",      b: "emotion",    insight: "Emotional labor is work that goes unrecognized — and uncompensated." },
+  { a: "labor",      b: "caste",      insight: "Who does which work is rarely accidental. Caste scripts it in advance." },
+  { a: "state",      b: "violence",   insight: "The state holds a monopoly on legitimate violence. Legitimate is doing a lot of work in that sentence." },
+  { a: "state",      b: "caste",      insight: "The Indian state has never been caste-neutral. It was built by and for particular bodies." },
+  { a: "state",      b: "resistance", insight: "Resistance names itself against something. Usually: the state." },
+  { a: "identity",   b: "violence",   insight: "Violence in Manipur, like most communal violence, is a project of identity — its enforcement and erasure." },
+  { a: "identity",   b: "community",  insight: "Community and identity are mutually constitutive — you know who you are partly by who you belong with." },
+  { a: "identity",   b: "algorithm",  insight: "Algorithms sort, amplify, and reward identities. They do not discover them. They produce them." },
+  { a: "memory",     b: "violence",   insight: "Violence is remembered differently by those who suffered it and those who inflicted it. Both versions circulate as truth." },
+  { a: "memory",     b: "story",      insight: "Stories are how memory survives institutionally. Without stories, memory is just grief." },
+  { a: "memory",     b: "identity",   insight: "Collective identity is sustained by shared memory — and by shared forgetting." },
+  { a: "caste",      b: "knowledge",  insight: "Who produces knowledge, from where, about whom — these are caste questions before they are epistemological ones." },
+  { a: "gender",     b: "community",  insight: "Community cohesion is often built on the management and restriction of women's mobility." },
+  { a: "algorithm",  b: "community",  insight: "Online communities form around algorithmic surfaces. Reddit shaped a generation's sense of belonging." },
+  { a: "algorithm",  b: "resistance", insight: "Algorithms can be gamed, hacked, and subverted. That is a form of resistance." },
+  { a: "story",      b: "knowledge",  insight: "NRS believes knowledge is not separate from story. The form is not decoration — it is epistemology." },
+  { a: "story",      b: "field",      insight: "Fieldwork is the practice of entering other people's stories without colonizing them." },
+  { a: "knowledge",  b: "field",      insight: "Knowledge produced from the field is different in kind, not just content, from knowledge produced at a desk." },
+  { a: "resistance", b: "emotion",    insight: "Resistance often begins as feeling — before it becomes action, it is refusal, disgust, love." },
+  { a: "community",  b: "field",      insight: "The field is not a location. It is a relationship. Community is what makes the field possible." },
+  { a: "emotion",    b: "state",      insight: "The BSF's emotional labor is state labor — performed affect in the service of territorial control." },
+  { a: "labor",      b: "resistance", insight: "Unpaid labor is often framed as love or duty. Naming it as labor is already an act of resistance." },
+  { a: "gender",     b: "field",      insight: "Who can enter the field, stay, and be trusted there — these are gendered questions every researcher faces." },
+  { a: "story",      b: "resistance", insight: '"No research ever ends. It is only abandoned." That is its own form of resistance — to closure, to certainty.' },
+];
+
+// ── STATE ─────────────────────────────────────────────────────
+
+let selected = null;
+let found = new Set();
+let attempts = 0;
+let nodeEls = {};
+
+// ── LAYOUT ───────────────────────────────────────────────────
+
+// Positions as % of canvas (x, y)
+const positions = [
+  { id: "labor",      x: 18, y: 18 },
+  { id: "state",      x: 50, y: 12 },
+  { id: "identity",   x: 80, y: 20 },
+  { id: "memory",     x: 88, y: 50 },
+  { id: "violence",   x: 75, y: 78 },
+  { id: "caste",      x: 50, y: 85 },
+  { id: "gender",     x: 22, y: 75 },
+  { id: "algorithm",  x: 10, y: 50 },
+  { id: "community",  x: 35, y: 45 },
+  { id: "story",      x: 62, y: 45 },
+  { id: "knowledge",  x: 50, y: 60 },
+  { id: "resistance", x: 15, y: 32 },
+  { id: "emotion",    x: 68, y: 25 },
+  { id: "field",      x: 38, y: 22 },
+];
+
+function getPos(id) {
+  const canvas = document.getElementById('canvas');
+  const w = canvas.offsetWidth;
+  const h = canvas.offsetHeight;
+  const p = positions.find(p => p.id === id);
+  return { x: (p.x / 100) * w, y: (p.y / 100) * h };
+}
+
+// ── BUILD DOM ─────────────────────────────────────────────────
+
+function buildNodes() {
+  const canvas = document.getElementById('canvas');
+  // remove old nodes
+  canvas.querySelectorAll('.node').forEach(n => n.remove());
+  nodeEls = {};
+
+  concepts.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'node';
+    div.id = 'node-' + c.id;
+    div.textContent = c.label;
+    div.dataset.id = c.id;
+
+    const pos = positions.find(p => p.id === c.id);
+    div.style.left = pos.x + '%';
+    div.style.top  = pos.y + '%';
+
+    div.addEventListener('click', () => onNodeClick(c.id));
+    canvas.appendChild(div);
+    nodeEls[c.id] = div;
+  });
+}
+
+// ── DRAW LINES ────────────────────────────────────────────────
+
+function drawLines() {
+  const svg = document.getElementById('web');
+  svg.innerHTML = '';
+
+  found.forEach(key => {
+    const [a, b] = key.split('|');
+    const pa = getPos(a);
+    const pb = getPos(b);
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', pa.x); line.setAttribute('y1', pa.y);
+    line.setAttribute('x2', pb.x); line.setAttribute('y2', pb.y);
+    line.setAttribute('stroke', '#7c5bd7');
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('opacity', '0.55');
+    svg.appendChild(line);
+
+    // midpoint dot
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', (pa.x + pb.x) / 2);
+    circle.setAttribute('cy', (pa.y + pb.y) / 2);
+    circle.setAttribute('r', '2.5');
+    circle.setAttribute('fill', '#9b7ef8');
+    circle.setAttribute('opacity', '0.7');
+    svg.appendChild(circle);
+  });
+}
+
+// ── INTERACTION ───────────────────────────────────────────────
+
+function onNodeClick(id) {
+  if (selected === null) {
+    selected = id;
+    nodeEls[id].classList.add('selected');
+    showPlaceholder(concepts.find(c => c.id === id).label + ' — now pick another concept.');
+  } else if (selected === id) {
+    nodeEls[id].classList.remove('selected');
+    selected = null;
+    showPlaceholder('Click any concept to begin.');
+  } else {
+    attempts++;
+    document.getElementById('attempt-count').textContent = attempts;
+
+    const key  = [selected, id].sort().join('|');
+    const prev = selected;
+    nodeEls[prev].classList.remove('selected');
+    selected = null;
+
+    if (found.has(key)) {
+      // already found — just show the insight again
+      const conn = getConn(prev, id);
+      if (conn) showInsight(prev, id, conn.insight);
+      return;
+    }
+
+    const conn = getConn(prev, id);
+    if (conn) {
+      found.add(key);
+      nodeEls[prev].classList.add('connected');
+      nodeEls[id].classList.add('connected');
+      document.getElementById('found-count').textContent = found.size;
+      drawLines();
+      showInsight(prev, id, conn.insight);
+      addDiscovered(prev, id, conn.insight);
+    } else {
+      showMiss(prev, id);
+    }
+  }
+}
+
+function getConn(a, b) {
+  return connections.find(c =>
+    (c.a === a && c.b === b) || (c.a === b && c.b === a)
+  );
+}
+
+function labelOf(id) {
+  return concepts.find(c => c.id === id).label;
+}
+
+function showInsight(a, b, text) {
+  document.getElementById('ins-placeholder').style.opacity = '0';
+  document.getElementById('ins-pair').textContent = labelOf(a) + '  ×  ' + labelOf(b);
+  document.getElementById('ins-text').textContent = text;
+  document.getElementById('ins-pair').className = 'insight-pair show';
+  document.getElementById('ins-text').className = 'insight-text show';
+  document.getElementById('ins-icon').className = 'insight-icon show';
+}
+
+function showMiss(a, b) {
+  document.getElementById('ins-placeholder').style.opacity = '0';
+  document.getElementById('ins-pair').textContent = labelOf(a) + '  ×  ' + labelOf(b);
+  document.getElementById('ins-text').textContent = 'No recognized connection — but that doesn\'t mean there isn\'t one.';
+  document.getElementById('ins-pair').className = 'insight-pair show';
+  document.getElementById('ins-text').className = 'insight-text show';
+  document.getElementById('ins-icon').className = 'insight-icon';
+}
+
+function showPlaceholder(text) {
+  document.getElementById('ins-pair').className = 'insight-pair';
+  document.getElementById('ins-text').className = 'insight-text';
+  document.getElementById('ins-icon').className = 'insight-icon';
+  document.getElementById('ins-placeholder').textContent = text;
+  document.getElementById('ins-placeholder').style.opacity = '1';
+}
+
+function addDiscovered(a, b, insight) {
+  const list = document.getElementById('disc-list');
+  const empty = list.querySelector('.empty-state');
+  if (empty) empty.remove();
+
+  const item = document.createElement('div');
+  item.className = 'disc-item';
+  item.innerHTML = `<span class="disc-pair">${labelOf(a)} × ${labelOf(b)}</span><span class="disc-insight">${insight}</span>`;
+  list.insertBefore(item, list.firstChild);
+}
+
+// ── INIT / RESET ──────────────────────────────────────────────
+
+function resetGame() {
+  found.clear();
+  attempts = 0;
+  selected = null;
+  document.getElementById('found-count').textContent = '0';
+  document.getElementById('attempt-count').textContent = '0';
+  document.getElementById('disc-list').innerHTML = '<p class="empty-state">None yet — start connecting.</p>';
+  document.getElementById('web').innerHTML = '';
+  showPlaceholder('Click any concept to begin.');
+  Object.values(nodeEls).forEach(el => { el.classList.remove('selected', 'connected'); });
+}
+
+function init() {
+  document.getElementById('total-count').textContent = connections.length;
+  buildNodes();
+  drawLines();
+  window.addEventListener('resize', () => { drawLines(); });
+}
+
+init();
+</script>
+</body>
+</html>
